@@ -25,7 +25,11 @@ app.use(randomRouter);
 app.use("/text", textRouter);
 
 mongoose
-    .connect(process.env.MONGODB_URL)
+    .connect(
+        process.env.NODE_ENV === "production"
+            ? process.env.MONGODB_PROD_URL
+            : process.env.MONGODB_DEV_URL
+    )
     .then((result) => {
         console.log("Connected");
 
