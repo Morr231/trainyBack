@@ -4,9 +4,9 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 
-const Text = require("./schemas/text");
-const IeltsFirstPart = require("./schemas/IeltsFirstPart");
-const { UserModel } = require("./schemas/user");
+// const Text = require("./schemas/text");
+// const IeltsFirstPart = require("./schemas/IeltsFirstPart");
+// const { UserModel } = require("./schemas/user");
 
 const port = process.env.PORT || 5000;
 
