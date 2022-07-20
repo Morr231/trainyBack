@@ -1,6 +1,35 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
+const commentSchema = new Schema({
+    text: {
+        type: String,
+        // required: true,
+        default: null,
+    },
+    date: {
+        type: Date,
+        default: null,
+    },
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
+    startPosition: {
+        type: Number,
+        defalt: null,
+    },
+    endPosition: {
+        type: Number,
+        defalt: null,
+    },
+    yPos: {
+        type: Number,
+        defalt: null,
+    },
+});
+
 const textsSchema = new Schema({
     text: {
         type: String,
@@ -26,6 +55,7 @@ const textsSchema = new Schema({
         type: String,
         default: null,
     },
+    comments: { type: [commentSchema], default: null },
 });
 
 const dateSchema = new Schema({
@@ -76,6 +106,29 @@ const statsSchema = new Schema({
     },
 });
 
+const achievementSchema = new Schema({
+    title: {
+        type: String,
+        default: "",
+    },
+    description: {
+        type: String,
+        default: "",
+    },
+    achievedTime: {
+        type: Date,
+        default: null,
+    },
+    achieved: {
+        type: Boolean,
+        default: false,
+    },
+    rank: {
+        type: String,
+        default: "",
+    },
+});
+
 const userSchema = new Schema({
     email: {
         type: String,
@@ -97,12 +150,34 @@ const userSchema = new Schema({
         type: String,
         required: true,
     },
+    description: {
+        type: String,
+        default: "",
+    },
     texts: {
         type: [textsSchema],
         default: null,
     },
+    imageUrl: {
+        type: String,
+        default: null,
+    },
+    firstEnter: {
+        type: Boolean,
+        default: true,
+    },
     daysTextCount: [dateSchema],
     statistics: { type: statsSchema, default: null },
+    achievements: {
+        type: [achievementSchema],
+        default: [],
+    },
+    incomingRequests: {
+        type: [{ type: Schema.Types.ObjectId, ref: "User" }],
+        default: [],
+    },
+    friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
 });
 
 exports.UserModel = mongoose.model("User", userSchema);

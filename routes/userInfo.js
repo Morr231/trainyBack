@@ -1,6 +1,13 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const cloudinary = require("cloudinary");
 require("dotenv").config();
+
+cloudinary.config({
+    cloud_name: process.env.REACT_APP_CLOUDINARY_NAME,
+    api_key: process.env.REACT_APP_CLOUDINARY_API_KEY,
+    api_secret: process.env.REACT_APP_CLOUDINARY_API_SECRET,
+});
 
 const router = express.Router();
 const { UserModel } = require("../schemas/user");
@@ -13,7 +20,7 @@ router.get("/data", (req, res) => {
     const query = UserModel.findOne({ username: req.tokenData.username });
 
     query.exec((err, found) => {
-        if (err) return handleError(err);
+        if (err) return HandleError(err);
 
         const calendarValues = [];
 
@@ -55,8 +62,35 @@ router.get("/data", (req, res) => {
         found.daysTextCount = calendarValues;
 
         found.save().then((err, done) => {
+            delete found.password;
             res.json({
                 userInfo: found,
+            });
+        });
+    });
+});
+
+router.post("/update-photo", (req, res) => {
+    const query = UserModel.findOne({ username: req.tokenData.username });
+
+    console.log("Hello");
+
+    query.exec((err, found) => {
+        if (err) return handleError(err);
+
+        if (found.imageUrl) {
+            let public_id = found.imageUrl.split("/");
+            public_id = public_id[public_id.length - 1].split(".")[0];
+
+            cloudinary.v2.uploader.destroy(public_id, (err, result) => {
+                console.log(err, result);
+            });
+        }
+        found.imageUrl = req.body.imageUrl;
+
+        found.save().then(() => {
+            res.json({
+                saved: true,
             });
         });
     });

@@ -4,32 +4,52 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const { UserModel, UserTextModel } = require("../schemas/user");
+const { TokenModel } = require("../schemas/token");
+
+const { fillAchievements } = require("./fillAchievements");
 
 function generateAccessToken(username) {
     return jwt.sign({ username }, process.env.TOKEN_SECRET, {
-        expiresIn: "1800s",
+        expiresIn: "1d",
     });
 }
 
 router.post("/signUp", (req, res) => {
-    const query = UserModel.findOne({ email: req.body.email });
-    query.exec((err, found) => {
+    const tokenQuery = TokenModel.findOne({ email: req.body.email });
+
+    tokenQuery.exec((err, found) => {
         if (err) return HandleError(err);
+        console.log(req.body.number, found.token);
 
-        if (!found) {
-            const user = new UserModel({ ...req.body, texts: [] });
-            user.save().then((item) => {
-                const token = generateAccessToken(found.username);
+        if (req.body.number == found.token) {
+            const query = UserModel.findOne({ email: req.body.email });
+            query.exec((err, found) => {
+                if (err) return HandleError(err);
 
-                res.json({
-                    saved: true,
-                    token: `Bearer ${token}`,
-                    username: found.username,
-                });
-                console.log("data saved in DB");
+                console.log(found);
+
+                if (!found) {
+                    const user = new UserModel({
+                        ...req.body,
+                        texts: [],
+                        achievements: fillAchievements(),
+                    });
+                    user.save().then((item) => {
+                        const token = generateAccessToken(req.body.username);
+
+                        res.json({
+                            saved: true,
+                            token: `Bearer ${token}`,
+                            username: req.body.username,
+                        });
+                        console.log("data saved in DB");
+                    });
+                } else {
+                    res.json({ saved: false });
+                }
             });
         } else {
-            res.json({ saved: false });
+            res.json({ token: false });
         }
     });
 });

@@ -100,7 +100,6 @@ const countEverydayWords = ({ texts }) => {
             }
         }
     });
-
     return everydayWords;
 };
 
