@@ -21,7 +21,7 @@ const userRouter = require("./routes/userInfo");
 const firstEnterRouter = require("./routes/firstEnter");
 
 const randomRouter = require("./routes/randomTopics/randomTopic");
-const IelstFPRouter = require("./routes/randomTopics/randomIeltsFP");
+// const IelstFPRouter = require("./routes/randomTopics/randomIeltsFP");
 
 const textRouter = require("./routes/text/text");
 const textCommentRouter = require("./routes/text/comment");
