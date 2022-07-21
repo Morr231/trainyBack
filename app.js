@@ -52,7 +52,7 @@ app.use("/user", firstEnterRouter);
 app.use("/settings", settingsRouter);
 
 app.use(randomRouter);
-app.use(IelstFPRouter);
+// app.use(IelstFPRouter);
 
 app.use("/text", textRouter);
 app.use("/text", textCommentRouter);
