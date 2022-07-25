@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { IeltsFPModel } = require("../../schemas/IeltsFirstPart");
+const IeltsFPModel = require("../../schemas/IeltsFirstPart");
 require("dotenv").config();
 
 // const validateToken = require("../middleware/validateToken");

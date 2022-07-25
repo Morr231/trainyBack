@@ -10,8 +10,6 @@ const validateToken = require("../middleware/validateToken");
 router.all("*", [validateToken]);
 
 router.post("/first-enter", (req, res) => {
-    console.log("Hello");
-
     const query = UserModel.findOne({ username: req.tokenData.username });
 
     query.exec((err, found) => {

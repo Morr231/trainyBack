@@ -1,5 +1,4 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const cloudinary = require("cloudinary");
 require("dotenv").config();
 
@@ -10,61 +9,87 @@ cloudinary.config({
 });
 
 const router = express.Router();
+
 const { UserModel } = require("../schemas/user");
+const { UserDatesModel } = require("../schemas/dateSchema");
+const { UserTextModel } = require("../schemas/userTextSchema");
 
 const validateToken = require("../middleware/validateToken");
 
 router.all("*", [validateToken]);
 
-router.get("/data", (req, res) => {
-    const query = UserModel.findOne({ username: req.tokenData.username });
+router.get("/my-data", (req, res) => {
+    const query = UserModel.findOne({
+        username: req.tokenData.username,
+    }).populate("statistics achievements texts posts");
 
     query.exec((err, found) => {
         if (err) return HandleError(err);
 
         const calendarValues = [];
 
-        found.texts.forEach((el) => {
-            const elDate = `${el.date.getFullYear()}-${Math.floor(
-                (el.date.getMonth() + 1) / 10
-            )}${Math.floor(el.date.getMonth() + 1) % 10}-${el.date.getDate()}`;
+        const texts = UserTextModel.find({
+            _id: {
+                $in: found.texts,
+            },
+        });
 
-            let valIndex = -1;
+        texts.exec((err, allText) => {
+            allText.forEach((el) => {
+                const elDate = `${el.date.getFullYear()}-${Math.floor(
+                    (el.date.getMonth() + 1) / 10
+                )}${
+                    Math.floor(el.date.getMonth() + 1) % 10
+                }-${el.date.getDate()}`;
 
-            calendarValues.forEach((val, index) => {
-                if (val.date === elDate) {
-                    valIndex = index;
+                let valIndex = -1;
+
+                calendarValues.forEach((val, index) => {
+                    if (val.date === elDate) {
+                        valIndex = index;
+                    }
+                });
+
+                if (valIndex !== -1) {
+                    calendarValues[valIndex].count++;
+                } else {
+                    calendarValues.push({ date: elDate, count: 1 });
                 }
             });
 
-            if (valIndex !== -1) {
-                calendarValues[valIndex].count++;
-            } else {
-                calendarValues.push({ date: elDate, count: 1 });
-            }
-        });
+            let maxValue = -1;
 
-        let maxValue = -1;
+            calendarValues.forEach((el) => {
+                if (el.count > maxValue) {
+                    maxValue = el.count;
+                }
+            });
 
-        calendarValues.forEach((el) => {
-            if (el.count > maxValue) {
-                maxValue = el.count;
-            }
-        });
+            calendarValues.forEach((el) => {
+                el.count = Math.floor((el.count / maxValue) * 4);
+                if (el.count === 0) {
+                    el.count = 1;
+                }
+            });
 
-        calendarValues.forEach((el) => {
-            el.count = Math.floor((el.count / maxValue) * 4);
-            if (el.count === 0) {
-                el.count = 1;
-            }
-        });
+            const newDates = new UserDatesModel();
+            newDates.dates = calendarValues;
 
-        found.daysTextCount = calendarValues;
+            newDates.save().then((dates) => {
+                found.daysTextCount = dates["_id"];
 
-        found.save().then((err, done) => {
-            delete found.password;
-            res.json({
-                userInfo: found,
+                found.save().then((done) => {
+                    let newDone = { ...done }._doc;
+
+                    delete newDone.password;
+                    delete newDone.daysTextCount;
+
+                    newDone.daysTextCount = calendarValues;
+
+                    res.json({
+                        userInfo: newDone,
+                    });
+                });
             });
         });
     });

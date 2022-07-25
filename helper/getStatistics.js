@@ -1,3 +1,5 @@
+const { UserDatesModel } = require("../schemas/dateSchema");
+
 const {
     countFastestEssay,
     countLongestEssay,
@@ -9,39 +11,53 @@ const {
     countDaysStreak,
 } = require("../routes/stats");
 
-const getStatistics = (found, item) => {
+const getStatistics = (allTexts, item) => {
     const fastestEssay = countFastestEssay({
-        texts: item.texts,
+        texts: allTexts,
     });
     const longestEssay = countLongestEssay({
-        texts: item.texts,
+        texts: allTexts,
     });
 
     const averageWPM = countAverageWPM({
-        texts: item.texts,
+        texts: allTexts,
     });
     const averageTime = countAverageTime({
-        texts: item.texts,
+        texts: allTexts,
     });
     const averageWordCount = countAverageWordCount({
-        texts: item.texts,
+        texts: allTexts,
     });
 
     const everydayWords = countEverydayWords({
-        texts: item.texts,
+        texts: allTexts,
     });
     const everydayTime = countEverydayTime({
-        texts: item.texts,
+        texts: allTexts,
     });
 
-    const daysStreak = countDaysStreak({
-        daysCount: item.daysTextCount,
+    const userDatas = UserDatesModel.findOne({
+        _id: item.daysTextCount,
+    });
+
+    let daysStreak = null;
+
+    userDatas.exec((err, allDatas) => {
+        daysStreak = countDaysStreak({
+            daysCount: allDatas.dates,
+        });
     });
 
     const statObj = {
         daysStreak: daysStreak,
-        fastestEssay: found.texts[fastestEssay],
-        longestEssay: found.texts[longestEssay],
+        fastestEssay:
+            allTexts.length === 1
+                ? item.texts[0]
+                : allTexts[fastestEssay]["_id"],
+        longestEssay:
+            allTexts.length === 1
+                ? item.texts[0]
+                : allTexts[longestEssay]["_id"],
         averageWPM: averageWPM,
         averageTime: averageTime,
         averageWordCount: averageWordCount,

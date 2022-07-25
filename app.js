@@ -25,6 +25,10 @@ const randomRouter = require("./routes/randomTopics/randomTopic");
 
 const textRouter = require("./routes/text/text");
 const textCommentRouter = require("./routes/text/comment");
+const allCommentsRouter = require("./routes/text/getComments");
+const changeTextPrivacyRouter = require("./routes/text/changePrivacy");
+
+const getUserRouter = require("./routes/user/getUser");
 
 const settingsRouter = require("./routes/settings");
 const achievedRouter = require("./routes/achieved");
@@ -37,6 +41,8 @@ const addFriendRouter = require("./routes/friend/addFriend");
 const skipFriendRouter = require("./routes/friend/skipFriend");
 const acceptFriendRouter = require("./routes/friend/acceptFriend");
 
+const savePostRouter = require("./routes/userFeed/savePost");
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -48,6 +54,7 @@ app.use(forgotPassword);
 app.use("/user", userRouter);
 app.use("/user", achievedRouter);
 app.use("/user", firstEnterRouter);
+app.use("/user", getUserRouter);
 
 app.use("/settings", settingsRouter);
 
@@ -56,6 +63,8 @@ app.use(randomRouter);
 
 app.use("/text", textRouter);
 app.use("/text", textCommentRouter);
+app.use("/text", allCommentsRouter);
+app.use("/text", changeTextPrivacyRouter);
 
 app.use("/search", usersSearchRouter);
 
@@ -64,6 +73,8 @@ app.use("/friend", addFriendRouter);
 app.use("/friend", skipFriendRouter);
 app.use("/friend", incomingRequests);
 app.use("/friend", acceptFriendRouter);
+
+app.use("/post", savePostRouter);
 
 mongoose
     .connect(

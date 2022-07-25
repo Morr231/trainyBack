@@ -3,8 +3,12 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const { UserModel, UserTextModel } = require("../schemas/user");
+const { UserModel } = require("../schemas/user");
 const { TokenModel } = require("../schemas/token");
+
+const { UserAchievementModel } = require("../schemas/achievementSchema");
+const { UserStatsModel } = require("../schemas/statsSchema");
+const { UserDatesModel } = require("../schemas/dateSchema");
 
 const { fillAchievements } = require("./fillAchievements");
 
@@ -17,59 +21,81 @@ function generateAccessToken(username) {
 router.post("/signUp", (req, res) => {
     const tokenQuery = TokenModel.findOne({ email: req.body.email });
 
-    tokenQuery.exec((err, found) => {
-        if (err) return HandleError(err);
-        console.log(req.body.number, found.token);
+    try {
+        tokenQuery.exec((err, found) => {
+            if (req.body.number == found.token) {
+                const query = UserModel.findOne({ email: req.body.email });
 
-        if (req.body.number == found.token) {
-            const query = UserModel.findOne({ email: req.body.email });
-            query.exec((err, found) => {
-                if (err) return HandleError(err);
+                query.exec((err, found) => {
+                    if (!found) {
+                        const stats = new UserStatsModel();
+                        const dates = new UserDatesModel();
+                        const achievements = new UserAchievementModel();
 
-                console.log(found);
+                        achievements.achievements = fillAchievements();
 
-                if (!found) {
-                    const user = new UserModel({
-                        ...req.body,
-                        texts: [],
-                        achievements: fillAchievements(),
-                    });
-                    user.save().then((item) => {
-                        const token = generateAccessToken(req.body.username);
+                        stats.save();
+                        dates.save();
 
-                        res.json({
-                            saved: true,
-                            token: `Bearer ${token}`,
-                            username: req.body.username,
+                        achievements.save().then((userAchievements) => {
+                            const user = new UserModel({
+                                ...req.body,
+                                statistics: stats["_id"],
+                                daysTextCount: dates["_id"],
+                                achievements: userAchievements["_id"],
+                            });
+
+                            user.save().then((item) => {
+                                const token = generateAccessToken(
+                                    req.body.username
+                                );
+
+                                res.json({
+                                    saved: true,
+                                    token: `Bearer ${token}`,
+                                    username: req.body.username,
+                                });
+                                console.log("data saved in DB");
+                            });
                         });
-                        console.log("data saved in DB");
-                    });
-                } else {
-                    res.json({ saved: false });
-                }
-            });
-        } else {
-            res.json({ token: false });
-        }
-    });
+                    } else {
+                        res.json({ saved: false });
+                    }
+                });
+            } else {
+                res.json({ token: false });
+            }
+        });
+    } catch (e) {
+        res.json({
+            saved: false,
+        });
+    }
 });
 
 router.post("/signIn", (req, res) => {
     const query = UserModel.findOne({ email: req.body.email });
-    query.exec((err, found) => {
-        if (err) return HandleError(err);
-        if (found && found.password === req.body.password) {
-            const token = generateAccessToken(found.username);
 
-            res.json({
-                found: true,
-                token: `Bearer ${token}`,
-                username: found.username,
-            });
-        } else {
-            res.json({ found: false });
-        }
-    });
+    try {
+        query.exec((err, found) => {
+            if (err) return HandleError(err);
+            if (found && found.password === req.body.password) {
+                const token = generateAccessToken(found.username);
+
+                res.json({
+                    found: true,
+                    token: `Bearer ${token}`,
+                    username: found.username,
+                });
+            } else {
+                res.json({ found: false });
+            }
+        });
+    } catch (e) {
+        res.json({
+            saved: false,
+        });
+    }
 });
 
 module.exports = router;

@@ -2,33 +2,35 @@ const express = require("express");
 const router = express.Router();
 require("dotenv").config();
 
-const { UserModel } = require("../../schemas/user");
+const { UserTextModel } = require("../../schemas/userTextSchema");
+const { UserCommentModel } = require("../../schemas/commentSchema");
 
 const validateToken = require("../../middleware/validateToken");
 router.all("*", [validateToken]);
 
-router.post("/comment", (req, res) => {
-    const query = UserModel.findOne({ _id: req.body.user });
+router.post("/comment/:id", (req, res) => {
+    const query = UserTextModel.findOne({ _id: req.params["id"] });
 
     try {
         query.exec((err, found) => {
-            const changingText = found.texts.filter(
-                (el) => el.topic === req.body.topic
-            )[0];
-
             const comment = {
                 text: req.body.text,
                 date: req.body.date,
                 user: req.body.user,
                 startPosition: req.body.startPosition,
                 endPosition: req.body.endPosition,
+                yPos: req.body.yPos,
             };
 
-            changingText.comments.push(comment);
+            const newComment = new UserCommentModel(comment);
 
-            found.save().then(() => {
-                res.json({
-                    saved: true,
+            newComment.save().then((item) => {
+                found.comments.push(item["_id"]);
+
+                found.save().then(() => {
+                    res.json({
+                        saved: true,
+                    });
                 });
             });
         });

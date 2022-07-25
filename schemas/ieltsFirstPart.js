@@ -8,4 +8,4 @@ const IeltsFirstPartSchema = new Schema({
     },
 });
 
-exports.IeltsFPModel = mongoose.model("IeltsFirstPart", IeltsFirstPartSchema);
+module.exports = mongoose.model("IeltsFirstPart", IeltsFirstPartSchema);
