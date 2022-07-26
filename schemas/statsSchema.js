@@ -4,39 +4,41 @@ const { Schema } = mongoose;
 const statsSchema = new Schema({
     daysStreak: {
         type: Number,
-        default: null,
+        default: 0,
     },
     bestDay: {
         type: Number,
-        default: null,
+        default: 0,
     },
     fastestEssay: {
-        type: [{ type: Schema.Types.ObjectId, ref: "UserText" }],
-        default: [],
+        type: Schema.Types.ObjectId,
+        ref: "UserText",
+        default: null,
     },
     longestEssay: {
-        type: [{ type: Schema.Types.ObjectId, ref: "UserText" }],
-        default: [],
+        type: Schema.Types.ObjectId,
+        ref: "UserText",
+        default: null,
     },
     averageWPM: {
         type: Number,
-        default: null,
+        default: 0,
     },
     averageTime: {
         type: Number,
-        default: null,
+        default: 0,
     },
     averageWordCount: {
         type: Number,
-        default: null,
+        default: 0,
     },
     dailyWordCount: {
         type: [],
-        default: null,
+        default: 0,
     },
     dailyTime: {
         type: [],
-        default: null,
+        default: 0,
     },
 });
 

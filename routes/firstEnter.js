@@ -10,7 +10,9 @@ const validateToken = require("../middleware/validateToken");
 router.all("*", [validateToken]);
 
 router.post("/first-enter", (req, res) => {
-    const query = UserModel.findOne({ username: req.tokenData.username });
+    const query = UserModel.findOne({
+        username: req.tokenData.username,
+    }).populate("statistics daysTextCount achievements texts posts");
 
     query.exec((err, found) => {
         if (err) return handleError(err);
@@ -19,7 +21,7 @@ router.post("/first-enter", (req, res) => {
 
         found.save().then((item) => {
             delete found.password;
-            res.json({ userInfo: found });
+            res.json({ saved: true });
             console.log("Text saved");
         });
     });

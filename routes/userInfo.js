@@ -19,80 +19,82 @@ const validateToken = require("../middleware/validateToken");
 router.all("*", [validateToken]);
 
 router.get("/my-data", (req, res) => {
-    const query = UserModel.findOne({
+    UserModel.findOne({
         username: req.tokenData.username,
-    }).populate("statistics achievements texts posts");
+    })
+        .populate("statistics achievements posts texts")
+        .exec((err, found) => {
+            if (err) return HandleError(err);
 
-    query.exec((err, found) => {
-        if (err) return HandleError(err);
+            const calendarValues = [];
 
-        const calendarValues = [];
+            const texts = UserTextModel.find({
+                _id: {
+                    $in: found.texts,
+                },
+            });
 
-        const texts = UserTextModel.find({
-            _id: {
-                $in: found.texts,
-            },
-        });
+            texts.exec((err, allText) => {
+                allText.forEach((el) => {
+                    const elDate = `${el.date.getFullYear()}-${Math.floor(
+                        (el.date.getMonth() + 1) / 10
+                    )}${
+                        Math.floor(el.date.getMonth() + 1) % 10
+                    }-${el.date.getDate()}`;
 
-        texts.exec((err, allText) => {
-            allText.forEach((el) => {
-                const elDate = `${el.date.getFullYear()}-${Math.floor(
-                    (el.date.getMonth() + 1) / 10
-                )}${
-                    Math.floor(el.date.getMonth() + 1) % 10
-                }-${el.date.getDate()}`;
+                    let valIndex = -1;
 
-                let valIndex = -1;
+                    calendarValues.forEach((val, index) => {
+                        if (val.date === elDate) {
+                            valIndex = index;
+                        }
+                    });
 
-                calendarValues.forEach((val, index) => {
-                    if (val.date === elDate) {
-                        valIndex = index;
+                    if (valIndex !== -1) {
+                        calendarValues[valIndex].count++;
+                    } else {
+                        calendarValues.push({ date: elDate, count: 1 });
                     }
                 });
 
-                if (valIndex !== -1) {
-                    calendarValues[valIndex].count++;
-                } else {
-                    calendarValues.push({ date: elDate, count: 1 });
-                }
-            });
+                let maxValue = -1;
 
-            let maxValue = -1;
+                calendarValues.forEach((el) => {
+                    if (el.count > maxValue) {
+                        maxValue = el.count;
+                    }
+                });
 
-            calendarValues.forEach((el) => {
-                if (el.count > maxValue) {
-                    maxValue = el.count;
-                }
-            });
+                calendarValues.forEach((el) => {
+                    el.count = Math.floor((el.count / maxValue) * 4);
+                    if (el.count === 0) {
+                        el.count = 1;
+                    }
+                });
 
-            calendarValues.forEach((el) => {
-                el.count = Math.floor((el.count / maxValue) * 4);
-                if (el.count === 0) {
-                    el.count = 1;
-                }
-            });
+                const newDates = new UserDatesModel();
+                newDates.dates = calendarValues;
 
-            const newDates = new UserDatesModel();
-            newDates.dates = calendarValues;
+                newDates.save().then((dates) => {
+                    found.daysTextCount = dates["_id"];
 
-            newDates.save().then((dates) => {
-                found.daysTextCount = dates["_id"];
+                    found.save().then((done) => {
+                        let newDone = { ...done }._doc;
 
-                found.save().then((done) => {
-                    let newDone = { ...done }._doc;
+                        delete newDone.password;
+                        delete newDone.daysTextCount;
 
-                    delete newDone.password;
-                    delete newDone.daysTextCount;
+                        newDone.daysTextCount = calendarValues;
 
-                    newDone.daysTextCount = calendarValues;
+                        console.log(newDone);
 
-                    res.json({
-                        userInfo: newDone,
+                        res.json({
+                            userInfo: newDone,
+                        });
                     });
                 });
             });
         });
-    });
 });
 
 router.post("/update-photo", (req, res) => {
