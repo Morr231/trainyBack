@@ -2,44 +2,42 @@ const { text } = require("body-parser");
 
 const countFastestEssay = ({ texts }) => {
     let minFastestEssay = Infinity;
-    let fastestEssayIndex = -1;
+
+    console.log(texts);
 
     texts.forEach((el, index) => {
         if (el.timeSpend && el.timeSpend < minFastestEssay) {
             minFastestEssay = el.timeSpend;
-            fastestEssayIndex = index;
         }
     });
 
-    return fastestEssayIndex;
+    return minFastestEssay;
 };
 
 const countLongestEssay = ({ texts }) => {
     let maxLongestEssay = -1;
-    let longestEssayIndex = -1;
 
     texts.forEach((el, index) => {
         if (el.wordCount && el.wordCount > maxLongestEssay) {
             maxLongestEssay = el.wordCount;
-            longestEssayIndex = index;
         }
     });
 
-    return longestEssayIndex;
+    return maxLongestEssay;
 };
 
 const countAverageWPM = ({ texts }) => {
-    let averageWPM = 0;
+    let minutesSpend = 0;
+    let textCount = 0;
 
     texts.forEach((el) => {
         if (el.wordCount && el.timeSpend) {
-            let minutesSpend = el.timeSpend / 60;
-
-            averageWPM += el.wordCount / minutesSpend;
+            minutesSpend += parseInt(el.timeSpend);
+            textCount += parseInt(el.wordCount);
         }
     });
 
-    return Math.floor(averageWPM / text.length);
+    return Math.floor((textCount / minutesSpend) * 60);
 };
 
 const countAverageTime = ({ texts }) => {

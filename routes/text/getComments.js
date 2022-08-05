@@ -47,8 +47,6 @@ router.get("/all-comments/:id", (req, res) => {
                     });
                 });
 
-                console.log(found);
-
                 res.json({
                     found: found.comments,
                     users: filteredUsers,

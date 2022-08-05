@@ -36,28 +36,17 @@ const getStatistics = (allTexts, item) => {
         texts: allTexts,
     });
 
-    const userDatas = UserDatesModel.findOne({
-        _id: item.daysTextCount,
+    const daysStreak = countDaysStreak({
+        daysCount: item.daysTextCount.dates,
     });
 
-    let daysStreak = null;
-
-    userDatas.exec((err, allDatas) => {
-        daysStreak = countDaysStreak({
-            daysCount: allDatas.dates,
-        });
-    });
+    console.log(fastestEssay);
+    console.log(longestEssay);
 
     const statObj = {
         daysStreak: daysStreak,
-        fastestEssay:
-            allTexts.length === 1
-                ? item.texts[0]
-                : allTexts[fastestEssay]["_id"],
-        longestEssay:
-            allTexts.length === 1
-                ? item.texts[0]
-                : allTexts[longestEssay]["_id"],
+        fastestEssay: fastestEssay,
+        longestEssay: longestEssay,
         averageWPM: averageWPM,
         averageTime: averageTime,
         averageWordCount: averageWordCount,

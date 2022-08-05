@@ -14,8 +14,6 @@ router.get("/other/:id", (req, res) => {
 
     try {
         query.exec((err, found) => {
-            console.log(found);
-
             if (found) {
                 let newFound = { ...found }._doc;
 

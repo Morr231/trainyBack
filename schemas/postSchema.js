@@ -20,12 +20,24 @@ const postSchema = new Schema({
         default: null,
     },
     likes: {
-        type: Number,
-        default: 0,
+        likesNumber: {
+            type: Number,
+            default: 0,
+        },
+        whoLiked: {
+            type: [{ type: Schema.Types.ObjectId, ref: "User" }],
+            default: [],
+        },
     },
     dislikes: {
-        type: Number,
-        default: 0,
+        dislikesNumber: {
+            type: Number,
+            default: 0,
+        },
+        whoDisliked: {
+            type: [{ type: Schema.Types.ObjectId, ref: "User" }],
+            default: [],
+        },
     },
     comments: {
         type: [{ type: Schema.Types.ObjectId, ref: "UserPostComment" }],

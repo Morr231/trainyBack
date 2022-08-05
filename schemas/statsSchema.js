@@ -11,14 +11,12 @@ const statsSchema = new Schema({
         default: 0,
     },
     fastestEssay: {
-        type: Schema.Types.ObjectId,
-        ref: "UserText",
-        default: null,
+        type: Number,
+        default: 0,
     },
     longestEssay: {
-        type: Schema.Types.ObjectId,
-        ref: "UserText",
-        default: null,
+        type: Number,
+        default: 0,
     },
     averageWPM: {
         type: Number,

@@ -31,6 +31,8 @@ router.post("/save", (req, res) => {
         }
     }
 
+    wordCount--;
+
     const newText = {
         ...req.body,
         wordCount: wordCount,
@@ -38,7 +40,7 @@ router.post("/save", (req, res) => {
 
     const user = UserModel.findOne({
         username: req.tokenData.username,
-    });
+    }).populate("texts statistics daysTextCount");
 
     try {
         user.exec((err, found) => {
@@ -46,113 +48,85 @@ router.post("/save", (req, res) => {
 
             if (found) {
                 let foundTextIndex = -1;
-
-                const texts = UserTextModel.find({
-                    _id: {
-                        $in: found.texts,
-                    },
-                });
-
-                texts.exec(async (err, allTexts) => {
-                    allTexts.forEach((el, index) => {
-                        if (newText.topic === el.topic) {
-                            foundTextIndex = index;
-                        }
-                    });
-
-                    if (foundTextIndex === -1) {
-                        const newTextModel = new UserTextModel(newText);
-
-                        newTextModel.save().then(() => {
-                            found.texts.push(newTextModel["_id"]);
-
-                            found.save().then((item) => {
-                                const userStats = UserStatsModel.findOne({
-                                    _id: found.statistics,
-                                });
-
-                                userStats.exec((err, allStats) => {
-                                    const newStats = getStatistics(
-                                        [newText],
-                                        item
-                                    );
-
-                                    allStats.daysStreak = newStats.daysStreak;
-                                    allStats.fastestEssay =
-                                        newStats.fastestEssay;
-                                    allStats.longestEssay =
-                                        newStats.longestEssay;
-                                    allStats.averageWPM = newStats.averageWPM;
-                                    allStats.averageTime = newStats.averageTime;
-                                    allStats.averageWordCount =
-                                        newStats.averageWordCount;
-                                    allStats.dailyWordCount =
-                                        newStats.dailyWordCount;
-                                    allStats.dailyTime = newStats.dailyTime;
-
-                                    allStats.save().then((item) => {
-                                        res.json({
-                                            saved: true,
-                                            textId: newTextModel["_id"],
-                                        });
-                                        console.log("Text saved");
-                                    });
-                                });
-                            });
-                        });
-                    } else {
-                        imageUrl = allTexts[foundTextIndex].imageUrl;
-
-                        let public_id = imageUrl.split("/");
-                        public_id =
-                            public_id[public_id.length - 1].split(".")[0];
-
-                        cloudinary.v2.uploader.destroy(
-                            public_id,
-                            (err, result) => {
-                                console.log(err, result);
-                            }
-                        );
-
-                        allTexts[foundTextIndex].regime = newText.regime;
-                        allTexts[foundTextIndex].text = newText.text;
-                        allTexts[foundTextIndex].topic = newText.topic;
-                        allTexts[foundTextIndex].date = newText.date;
-                        allTexts[foundTextIndex].finished = newText.finished;
-                        allTexts[foundTextIndex].wordCount = newText.wordCount;
-                        allTexts[foundTextIndex].timeSpend = newText.timeSpend;
-                        allTexts[foundTextIndex].imageUrl = newText.imageUrl;
-
-                        allTexts[foundTextIndex].save().then(() => {
-                            const userStats = UserStatsModel.findOne({
-                                _id: found.statistics,
-                            });
-
-                            userStats.exec((err, allStats) => {
-                                const newStats = getStatistics(allTexts, found);
-
-                                allStats.daysStreak = newStats.daysStreak;
-                                allStats.fastestEssay = newStats.fastestEssay;
-                                allStats.longestEssay = newStats.longestEssay;
-                                allStats.averageWPM = newStats.averageWPM;
-                                allStats.averageTime = newStats.averageTime;
-                                allStats.averageWordCount =
-                                    newStats.averageWordCount;
-                                allStats.dailyWordCount =
-                                    newStats.dailyWordCount;
-                                allStats.dailyTime = newStats.dailyTime;
-
-                                allStats.save().then((item) => {
-                                    res.json({
-                                        saved: true,
-                                        textId: allTexts[foundTextIndex]["_id"],
-                                    });
-                                    console.log("Text saved");
-                                });
-                            });
-                        });
+                found.texts.forEach((el, index) => {
+                    if (newText.topic === el.topic) {
+                        foundTextIndex = index;
                     }
                 });
+
+                if (foundTextIndex === -1) {
+                    const newTextModel = new UserTextModel(newText);
+
+                    newTextModel.save().then((savedText) => {
+                        found.texts.push(savedText["_id"]);
+
+                        found.save().then((item) => {
+                            const newStats = getStatistics([newText], item);
+
+                            found.statistics.daysStreak = newStats.daysStreak;
+                            found.statistics.fastestEssay =
+                                newStats.fastestEssay;
+                            found.statistics.longestEssay =
+                                newStats.longestEssay;
+                            found.statistics.averageWPM = newStats.averageWPM;
+                            found.statistics.averageTime = newStats.averageTime;
+                            found.statistics.averageWordCount =
+                                newStats.averageWordCount;
+                            found.statistics.dailyWordCount =
+                                newStats.dailyWordCount;
+                            found.statistics.dailyTime = newStats.dailyTime;
+
+                            found.statistics.save().then((item) => {
+                                res.json({
+                                    saved: true,
+                                    textId: savedText["_id"],
+                                });
+                                console.log("Text saved");
+                            });
+                        });
+                    });
+                } else {
+                    imageUrl = found.texts[foundTextIndex].imageUrl;
+
+                    let public_id = imageUrl.split("/");
+                    public_id = public_id[public_id.length - 1].split(".")[0];
+
+                    cloudinary.v2.uploader.destroy(public_id, (err, result) => {
+                        console.log(err, result);
+                    });
+
+                    found.texts[foundTextIndex].regime = newText.regime;
+                    found.texts[foundTextIndex].text = newText.text;
+                    found.texts[foundTextIndex].topic = newText.topic;
+                    found.texts[foundTextIndex].date = newText.date;
+                    found.texts[foundTextIndex].finished = newText.finished;
+                    found.texts[foundTextIndex].wordCount = newText.wordCount;
+                    found.texts[foundTextIndex].timeSpend = newText.timeSpend;
+                    found.texts[foundTextIndex].imageUrl = newText.imageUrl;
+
+                    found.texts[foundTextIndex].save().then(() => {
+                        const newStats = getStatistics(found.texts, found);
+
+                        found.statistics.daysStreak = newStats.daysStreak;
+                        found.statistics.fastestEssay = newStats.fastestEssay;
+                        found.statistics.longestEssay = newStats.longestEssay;
+                        found.statistics.averageWPM = newStats.averageWPM;
+                        found.statistics.averageTime = newStats.averageTime;
+                        found.statistics.averageWordCount =
+                            newStats.averageWordCount;
+                        found.statistics.dailyWordCount =
+                            newStats.dailyWordCount;
+                        found.statistics.dailyTime = newStats.dailyTime;
+
+                        found.statistics.save().then((item) => {
+                            res.json({
+                                saved: true,
+                                textId: found.texts[foundTextIndex]["_id"],
+                            });
+                            console.log("Text saved");
+                        });
+                    });
+                }
             } else {
                 res.json({ saved: false });
             }
