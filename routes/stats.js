@@ -32,8 +32,8 @@ const countAverageWPM = ({ texts }) => {
 
     texts.forEach((el) => {
         if (el.wordCount && el.timeSpend) {
-            minutesSpend += parseInt(el.timeSpend);
-            textCount += parseInt(el.wordCount);
+            minutesSpend += el.timeSpend;
+            textCount += el.wordCount;
         }
     });
 

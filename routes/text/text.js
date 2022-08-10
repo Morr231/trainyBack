@@ -105,6 +105,8 @@ router.post("/save", (req, res) => {
                     found.texts[foundTextIndex].imageUrl = newText.imageUrl;
 
                     found.texts[foundTextIndex].save().then(() => {
+                        console.log(found.texts[foundTextIndex]);
+
                         const newStats = getStatistics(found.texts, found);
 
                         found.statistics.daysStreak = newStats.daysStreak;
